@@ -1,5 +1,6 @@
 const WebSocketServer = require('ws').Server
 const wss = new WebSocketServer({port:5080})
+const chokidar = require('chokidar')
 const fs = require('fs')
 
 wss.on('connection',(ws)=>{
@@ -22,7 +23,7 @@ wss.on('connection',(ws)=>{
         })
     })
 
-    fs.watch(
+    chokidar.watch(
         'data', /* watch data folder */
         {persistent:true,recursive:false,encoding:'utf8'},
         (ev,fn)=>{

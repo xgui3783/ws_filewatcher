@@ -22,22 +22,19 @@ wss.on('connection',(ws)=>{
                 })
         })
     })
+    const watcher = chokidar.watch('data',{persistent:true})
 
-    chokidar.watch(
-        'data', /* watch data folder */
-        {persistent:true,recursive:false,encoding:'utf8'},
-        (ev,fn)=>{
-            if(ev!=='change') return
-            readFile('data/'+fn)
-                .then(data=>ws.send(JSON.stringify({event:ev,filename:fn,data:data}),err=>{
-                    if(err){
-                        console.log('ws.sendmessage error',err)
-                    }
-                }))
-                .catch(e=>{
-                    console.log('readfile error',e)
-                })
-        })
+    watcher.on('change',(path,stat)=>{
+        readFile(path)
+            .then(data=>ws.send(JSON.stringify({event:'change',filename:path.replace(/data\\|data\//,''),data:data}),err=>{
+                if(err){
+                    console.log('ws.sendmessage error',err)
+                }
+            }))
+            .catch(e=>{
+                console.log('readfile error',e)
+            })
+    })
 
     const readFile = (path)=> new Promise((resolve,reject) =>{
         fs.readFile(path,'utf8',(err,data)=>{

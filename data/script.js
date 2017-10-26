@@ -1,9 +1,8 @@
 (()=>{
-
     const button = document.getElementById('fzj.xg.test.testbutton')
     
     button.addEventListener('click',()=>{
-        console.log('test')
+        console.log('test2345') 
     })
 
     const viewerMousePositionSubscriber = window.nehubaViewer.mousePosition.inRealSpace
@@ -15,8 +14,6 @@
             }
             // button.innerHTML = ev?ev.join(' '):'null')
         })
-    
-    
 
     const shutdownHandler = window.pluginControl
         .filter(evPk=>evPk.target=='AFFLIATION.AUTHOR.PACKAGE'&&evPk.body.shutdown)
@@ -25,4 +22,4 @@
               shutdownHandler.unsubscribe()
         })
     
-})() 
+})()

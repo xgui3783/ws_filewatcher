@@ -197,6 +197,8 @@
             })
       }
 
+      domArea1.focus()
+
       domSubmit.addEventListener('click',(ev)=>{
             const validation = () =>{
                   if( geneNames.length < 2 || domArea1.value == '' || domArea2.value == ''){
@@ -242,9 +244,11 @@
 
             document.getElementById('fzj.xg.jugex.result').appendChild(panelObj.panel)
             const queryString = `Regions queried: ${requestBodyV2.area1.name} ${requestBodyV2.area2.name}. Genes queried: ${JSON.stringify(requestBodyV2.genelist).replace(/\"|\[|\]/gi,'')}`
+            const queryStringDisplay = `(${requestBodyV2.area1.name}, ${requestBodyV2.area2.name})`
+
             const domQueryString = document.createElement('div')
             domQueryString.style.order = -3
-            domQueryString.innerHTML = queryString
+            //domQueryString.innerHTML = queryString
             panelObj.panelBody.appendChild(domQueryString)
             
             fetch(request)
@@ -271,9 +275,9 @@
                         (()=>{
                               [container,col1,col2] = createRow()
                               container.style.order = -1
-                              col1.innerHTML = 'gene'
+                              col1.innerHTML = 'Gene Symbol'
                               col1.style.fontWeight = 900
-                              col2.innerHTML = 'pval'
+                              col2.innerHTML = 'Pval'
                               col2.style.fontWeight = 900
                               panelObj.panelBody.appendChild(container)
                         })()
@@ -288,8 +292,9 @@
                         
                         panelObj.panel.className = panelObj.panel.className.replace(/panel\-warning/gi,'')
                         panelObj.panel.className += ' panel-success'
-                        panelObj.panelHeader.innerHTML = 'Result of Differential Analysis'
-            
+                        panelObj.panelHeader.innerHTML = 'Completed'
+                        //panelObj.panelHeader.innerHTML += queryString
+                        panelObj.panelHeader.innerHTML += queryStringDisplay
                         const domhr2 = document.createElement('hr')
                         domhr2.style.order = -1001
                         domhr2.style.width = '100%'
@@ -306,27 +311,33 @@
 
                         const date = new Date()
                         const metadata = `Date: ${['',''+date.getFullYear()+(date.getMonth()+1)+date.getDate()+'_'+date.getHours()+date.getMinutes()].toString()}\nRegions: ${['',requestBodyV2.area1.name,requestBodyV2.area2.name].toString()}\nGenelist: ${['',...requestBodyV2.genelist].toString()}\n\n`
-                        let pvalString = metadata
+                        let pvalString = ''
                         for(let key in result[1]){
                               pvalString += [key, result[1][key]].join(',') + '\n'
                         }
+                        const dateDownload = ''+date.getFullYear()+(date.getMonth()+1)+date.getDate()+'_'+date.getHours()+':'+date.getMinutes()
                         const domDownloadPVal = parseContentToCsv(pvalString)
-                        domDownloadPVal.innerHTML = 'Download PVal CSV'
+                        domDownloadPVal.innerHTML = 'Download Pvals of genes ('+dateDownload+')'
                         domDownloadPVal.setAttribute('download','PVal.csv')
                         domDownloadPVal.style.order = -3
                         panelObj.panelBody.appendChild(domDownloadPVal)
 
+                        let areaString = 'ROI, x, y, z\n'
                         for(let key in result[0]){
-                              let areaString = metadata
-                              areaString += result[0][key].join('\n')
-                              const domDownloadArea = parseContentToCsv(areaString)
-                              domDownloadArea.innerHTML = `Download ${key} CSV`
-                              domDownloadArea.setAttribute('download',`${key}.csv`)
-                              domDownloadArea.style.order = -3
-                              panelObj.panelBody.appendChild(domDownloadArea)
+                                for(let i in result[0][key]){
+                                    areaString += key+','+result[0][key][i].join(',')+'\n'
+                                }
                         }
+                            const domDownloadArea = parseContentToCsv(areaString)
+                            domDownloadArea.innerHTML = 'Download sample coordinates ('+dateDownload+')'
+                            domDownloadArea.setAttribute('download',`SampleCoordinates.csv`)
+                            //domDownloadArea.innerHTML = `Download ${key} CSV`
+                            //domDownloadArea.setAttribute('download',`${key}.csv`)
+                            domDownloadArea.style.order = -3
+                            panelObj.panelBody.appendChild(domDownloadArea)
 
                         /* TODO remove the try catch block window.pluginControl should always be defined */
+
                         try{
                               window['pluginControl'].next({
                                     target : 'JuGeX',
@@ -440,7 +451,7 @@
             console.log('old api, no longer works',e)
             console.log('reroute to new api to subscribe to new event')
             mouseEventSubscription = window.nehubaUI.mouseEvent
-                  .filter(ev=>ev.mode=='click')
+                  .filter(ev=>ev.eventName=='click')
                   .subscribe(ev=>{
                         if( domArea1.getAttribute('value') == '' ){
                               domArea1.focus()

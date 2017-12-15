@@ -1,19 +1,28 @@
 <html><head>
+
 <meta http-equiv="content-type" content="text/html; charset=UTF-8"></head><body><form>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
       <!--
       <div class="well" placeholder="Hover to preview the region data">
             <span>Region Preview : </span><br>
             <span id="fzj.xg.jugex.preview">&nbsp;</span>
       </div>
       -->
+
+      <script>
+      $(document).ready(function(){
+        $('[data-toggle="tooltip"]').tooltip();
+      });
+      </script>
+
       <div class="well" >
-            <span>Please select two areas of interest : </span><br>
+            <span>Please select two regions of interest : </span><br>
             <span id="fzj.xg.jugex.preview">&nbsp;</span>
       </div>
 
       <div class="input-group">
-            <span class="input-group-addon">Area 1</span>
-            <input id="fzj.xg.jugex.area1" name="fzj.xg.jugex.area1" class="form-control" placeholder="" readonly="readonly" type="text">
+            <span class="input-group-addon">Region 1</span>
+            <input id="fzj.xg.jugex.area1" name="fzj.xg.jugex.area1" class="form-control" placeholder="" readonly="readonly" type="text"  title="Select the first roi">
             <span class="input-group-btn">
                   <div class="btn btn-default" id="fzj.xg.jugex.editarea1">
                         <span class="glyphicon glyphicon-edit"></span>
@@ -22,29 +31,31 @@
       </div>
 
       <div class="input-group">
-            <span class="input-group-addon">Area 2</span>
-            <input id="fzj.xg.jugex.area2" name="fzj.xg.jugex.area2" class="form-control" placeholder="" readonly="readonly" type="text">
+            <span class="input-group-addon">Region 2</span>
+            <input id="fzj.xg.jugex.area2" name="fzj.xg.jugex.area2" class="form-control" placeholder="" readonly="readonly" type="text"  title="Now select the second roi">
             <span class="input-group-btn">
                   <div class="btn btn-default" id="fzj.xg.jugex.editarea2">
                         <span class="glyphicon glyphicon-edit"></span>
                   </div>
             </span>
       </div>
-
       <hr class="col-md-10">
 
       <div class="col-md-12">
             Select genes of interest:
       </div>
+
       <div class="input-group" id="fzj.xg.jugex.genes.group">
             <input id="fzj.xg.jugex.genes" name="fzj.xg.jugex.genes" class="form-control" placeholder="Genes of interest ..." type="text">
             <input class="hidden" id="fzj.xg.jugex.genelist.import.input" name="fzj.xg.jugex.genelist.import.input" type="file">
             <span class="input-group-btn">
-                  <div id="fzj.xg.jugex.addgenes" name="fzj.xg.jugex.addgenes" class="btn btn-default">Add</div>
-                  <div class="btn btn-default" id="fzj.xg.jugex.genelist.import">import</div>
-                  <div class="btn btn-default" id="fzj.xg.jugex.genelist.export">export</div>
+                  <div id="fzj.xg.jugex.addgenes" name="fzj.xg.jugex.addgenes" class="btn btn-default" data-toggle="tooltip" title="Add a gene">Add</div>
+                  <div class="btn btn-default" id="fzj.xg.jugex.genelist.import" data-toggle="tooltip" title="Import a csv file">Import</div>
+                  <div class="btn btn-default" id="fzj.xg.jugex.genelist.export" data-toggle="tooltip" title="Export selected genes into a csv file">Export</div>
             </span>
       </div>
+
+
       <span id="fzj.xg.jugex.genelist"></span>
 
       <hr class="col-md-10">
@@ -63,4 +74,5 @@
       <div class="col-md-12" id="fzj.xg.jugex.result">
 
       </div>
-</form></body></html>
+</form>
+</body></html>

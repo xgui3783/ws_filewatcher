@@ -441,6 +441,7 @@
             mouseEventSubscription = window.mouseEvent
                   .filter(ev=>ev.mode=='click')
                   .subscribe(ev=>{
+                        console.log(ev)
                         if( domArea1.getAttribute('value') == '' ){
                               domArea1.focus()
                         }else if( domArea2.getAttribute('value') == '' ){
@@ -453,9 +454,10 @@
             mouseEventSubscription = window.nehubaUI.mouseEvent
                   .filter(ev=>ev.eventName=='click')
                   .subscribe(ev=>{
-                        if( domArea1.getAttribute('value') == '' ){
+                                 console.log('click',domArea1.getAttribute('value'),domArea2.getAttribute('value'))
+                        if( domArea1.getAttribute('value') == '' || !domArea1.getAttribute('value') ){
                               domArea1.focus()
-                        }else if( domArea2.getAttribute('value') == '' ){
+                        }else if( domArea2.getAttribute('value') == '' || !domArea2.getAttribute('value') ){
                               domArea2.focus()
                         }
                   })

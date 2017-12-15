@@ -163,8 +163,29 @@
       }
       autocompleteJs.src = 'http://172.104.156.15/js/js-autocomplete.min'
 
-      document.head.appendChild(autocompleteJs)
-      document.head.appendChild(autocompleteCss)
+      document.head.appendChild(autocompleteJs)     
+     document.head.appendChild(autocompleteCss)
+
+     const tooltipJs = document.createElement('script')
+     let tooltipCounter = 0
+     tooltipJs.onload = ()=>{
+         tooltipCounter++
+         if(tooltipCounter == 2){
+             $('#fzj.xg.jugex.addgenes').tooltip()
+         }
+     }
+     tooltipJs.src = 'https://code.jquery.com/jquery-3.2.1.min.js'
+     const bootstrapJs = document.createElement('script')
+     bootstrapJs.onload = ()=>{
+         tooltipCounter++
+         if(tooltipCounter == 2){
+             $('#fzj.xg.jugex.addgenes').tooltip()
+         }
+     }
+     bootstrapJs.src = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'
+     document.head.appendChild(tooltipJs)
+     document.head.appendChild(bootstrapJs)
+
 
       const pendingRequestPanel = ()=>{
             const panel = document.createElement('div')
@@ -454,7 +475,6 @@
             mouseEventSubscription = window.nehubaUI.mouseEvent
                   .filter(ev=>ev.eventName=='click')
                   .subscribe(ev=>{
-                                 console.log('click',domArea1.getAttribute('value'),domArea2.getAttribute('value'))
                         if( domArea1.getAttribute('value') == '' || !domArea1.getAttribute('value') ){
                               domArea1.focus()
                         }else if( domArea2.getAttribute('value') == '' || !domArea2.getAttribute('value') ){

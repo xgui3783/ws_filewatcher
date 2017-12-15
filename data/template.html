@@ -1,7 +1,6 @@
 <html><head>
 
 <meta http-equiv="content-type" content="text/html; charset=UTF-8"></head><body><form>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
       <!--
       <div class="well" placeholder="Hover to preview the region data">
             <span>Region Preview : </span><br>
@@ -9,11 +8,6 @@
       </div>
       -->
 
-      <script>
-      $(document).ready(function(){
-        $('[data-toggle="tooltip"]').tooltip();
-      });
-      </script>
 
       <div class="well" >
             <span>Please select two regions of interest : </span><br>
@@ -49,9 +43,9 @@
             <input id="fzj.xg.jugex.genes" name="fzj.xg.jugex.genes" class="form-control" placeholder="Genes of interest ..." type="text">
             <input class="hidden" id="fzj.xg.jugex.genelist.import.input" name="fzj.xg.jugex.genelist.import.input" type="file">
             <span class="input-group-btn">
-                  <div id="fzj.xg.jugex.addgenes" name="fzj.xg.jugex.addgenes" class="btn btn-default" data-toggle="tooltip" title="Add a gene">Add</div>
-                  <div class="btn btn-default" id="fzj.xg.jugex.genelist.import" data-toggle="tooltip" title="Import a csv file">Import</div>
-                  <div class="btn btn-default" id="fzj.xg.jugex.genelist.export" data-toggle="tooltip" title="Export selected genes into a csv file">Export</div>
+                  <div id="fzj.xg.jugex.addgenes" name="fzj.xg.jugex.addgenes" class="btn btn-default" title="Add a gene">Add</div>
+                  <div class="btn btn-default" id="fzj.xg.jugex.genelist.import" title="Import a csv file">Import</div>
+                  <div class="btn btn-default" id="fzj.xg.jugex.genelist.export" title="Export selected genes into a csv file">Export</div>
             </span>
       </div>
 

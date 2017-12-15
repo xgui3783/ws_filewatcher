@@ -191,7 +191,7 @@
 
             const panelHeader = document.createElement('div')
             panelHeader.className = "btn btn-block panel-heading"
-
+            panelHeader.style.whiteSpace = 'normal'
             const panelBody = document.createElement('div')
             panelBody.className = "panel-body"
             panelBody.style.maxHeight = '400px'

@@ -50,7 +50,7 @@
             domImportGeneListInput.click()
       })
 
-      const MINCHAR = 3
+      const MINCHAR = 1
       //change the following to localhost:8080 after running aioserver.py locally
 //      const URLBASE = 'http://172.104.156.15:8003/'
       const URLBASE = 'http://localhost:8003/'
@@ -237,7 +237,7 @@
             })
 
             const panelObj = pendingRequestPanel()
-            panelObj.panelHeader.innerHTML = 'Pending request'
+            panelObj.panelHeader.innerHTML = 'Running Differential Analysis'
             panelObj.panelBody.className += ' hidden'
 
             document.getElementById('fzj.xg.jugex.result').appendChild(panelObj.panel)
@@ -288,7 +288,7 @@
                         
                         panelObj.panel.className = panelObj.panel.className.replace(/panel\-warning/gi,'')
                         panelObj.panel.className += ' panel-success'
-                        panelObj.panelHeader.innerHTML = 'Request Completed.'
+                        panelObj.panelHeader.innerHTML = 'Result of Differential Analysis'
             
                         const domhr2 = document.createElement('hr')
                         domhr2.style.order = -1001
@@ -371,7 +371,7 @@
 
             findRegion
                   .then(region=>{
-                        preview.innerHTML = ev.segment? `${region.name} label:${ev.segment}` :'&nbsp;'
+                        //preview.innerHTML = ev.segment? `${region.name} label:${ev.segment}` :'&nbsp;'
                         if (document.activeElement === domArea1) {
                               domArea1.setAttribute('value', ev.segment ? `${region.name} label:${ev.segment}` : '')
                               region1 = region
@@ -383,7 +383,7 @@
                   })
                   .catch(e=>{
                         /* did not find the region in meta data */
-                        preview.innerHTML = ev.segment? `label:${ev.segment}` :'&nbsp;'
+                        //preview.innerHTML = ev.segment? `label:${ev.segment}` :'&nbsp;'
                         if (document.activeElement === domArea1) domArea1.setAttribute('value', ev.segment ? `label:${ev.segment}` : '')
                         if (document.activeElement === domArea2) domArea2.setAttribute('value', ev.segment ? `label:${ev.segment}` : '')
                   })

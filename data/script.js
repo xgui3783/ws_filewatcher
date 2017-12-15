@@ -166,26 +166,24 @@
       document.head.appendChild(autocompleteJs)     
      document.head.appendChild(autocompleteCss)
 
-     const tooltipJs = document.createElement('script')
-     let tooltipCounter = 0
-     tooltipJs.onload = ()=>{
-         tooltipCounter++
-         if(tooltipCounter == 2){
-             $('#fzj.xg.jugex.addgenes').tooltip()
-         }
-     }
-     tooltipJs.src = 'https://code.jquery.com/jquery-3.2.1.min.js'
-     const bootstrapJs = document.createElement('script')
-     bootstrapJs.onload = ()=>{
-         tooltipCounter++
-         if(tooltipCounter == 2){
-             $('#fzj.xg.jugex.addgenes').tooltip()
-         }
-     }
-     bootstrapJs.src = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'
-     document.head.appendChild(tooltipJs)
-     document.head.appendChild(bootstrapJs)
 
+     const jquery = document.createElement('script')
+          jquery.onload = ()=>{
+                console.log('loaded jquery')
+                const bootstrapJs = document.createElement('script')
+                bootstrapJs.onload = ()=>{
+                      $(addGene).tooltip()
+                      $(domImportGeneList).tooltip()
+                      $(domExportGeneList).tooltip()
+                      $(domArea1).tooltip()
+                      $(domArea2).tooltip()
+
+                }
+                bootstrapJs.src = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'
+                document.head.appendChild(bootstrapJs)
+          }
+          jquery.src = 'https://code.jquery.com/jquery-3.2.1.min.js'
+    document.head.appendChild(jquery)
 
       const pendingRequestPanel = ()=>{
             const panel = document.createElement('div')

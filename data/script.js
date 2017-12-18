@@ -34,8 +34,9 @@
                   const csvRaw = ev.target.result
                   geneList.innerHTML = ''
                   geneNames.splice(0,geneNames.length)
-                  csvRaw.split(',').forEach(gene=>{
-                        fnAddGene(gene)
+                  csvRaw.split(/\r|\r\n|\n|\t|\,|\;/).forEach(gene=>{
+                        if(gene.length > 0)
+                            fnAddGene(gene)
                   })
             }
             csvReader.readAsText(file,'utf-8')
@@ -52,8 +53,10 @@
 
       const MINCHAR = 1
       //change the following to localhost:8080 after running aioserver.py locally
-//      const URLBASE = 'http://172.104.156.15:8003/'
-      const URLBASE = 'http://localhost:8003/'
+      //const URLBASE = 'http://172.104.156.15:8003/'
+//      const URLBASE = 'http://localhost:8003/'
+      const URLBASE = 'http://134.94.8.220:8003/'
+
       const geneNames = []
 
       let autocompleteSuggestions = []
@@ -257,10 +260,11 @@
                   body : JSON.stringify(requestBodyV2)
             })
 
-            const panelObj = pendingRequestPanel()
-            panelObj.panelHeader.innerHTML = 'Running Differential Analysis'
+            const panelObj = pendingRequestPanel()                                     
+            panelObj.panelHeader.innerHTML = 'Running Differential Analysis.....'
             panelObj.panelBody.className += ' hidden'
-
+            var img = document.createElement('img')
+            img.src = "animated-progress-bar-gif-free-download-9.gif"
             document.getElementById('fzj.xg.jugex.result').appendChild(panelObj.panel)
             const queryString = `Regions queried: ${requestBodyV2.area1.name} ${requestBodyV2.area2.name}. Genes queried: ${JSON.stringify(requestBodyV2.genelist).replace(/\"|\[|\]/gi,'')}`
             const queryStringDisplay = `(${requestBodyV2.area1.name}, ${requestBodyV2.area2.name})`
@@ -466,7 +470,9 @@
                               domArea1.focus()
                         }else if( domArea2.getAttribute('value') == '' ){
                               domArea2.focus()
-                        }
+                        }else if( domGenes.getAttribute('value') == '' ){
+                              domGenes.focus()
+                       }
                   })
       }catch(e){
             console.log('old api, no longer works',e)

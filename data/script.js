@@ -275,6 +275,16 @@
             panelObj.panelBody.appendChild(domQueryString)
             
             fetch(request)
+                  .then(resp=> {if (resp.ok){
+                            return Promise.resolve(resp)
+                            }
+                            else {
+                                return new Promise((resolve,reject)=>{
+                                                   resp.text()
+                                                       .then(text=>reject(text))
+                                                   })
+                            }
+                        } )
                   .then(resp=>resp.text())
                   .then(text=>{
                         
@@ -380,7 +390,8 @@
                         console.log('error',e)
                         panelObj.panel.className = panelObj.panel.className.replace(/panel\-warning/gi,'')
                         panelObj.panel.className += ' panel-danger'
-                        panelObj.panelHeader.innerHTML = 'Error. Check console.'
+                        panelObj.panelHeader.innerHTML = 'Error. Check below.'
+                        panelObj.panelBody.innerHTML = e
                   })
 
       })

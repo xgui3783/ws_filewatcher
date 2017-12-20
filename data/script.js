@@ -4,6 +4,7 @@
       const domArea2 = document.getElementById('fzj.xg.jugex.area2')
       const editArea1 = document.getElementById('fzj.xg.jugex.editarea1')
       const editArea2 = document.getElementById('fzj.xg.jugex.editarea2')
+      const domThreshold = document.getElementById('fzj.xg.jugex.threshold')
       const domGenes = document.getElementById('fzj.xg.jugex.genes')
       const addGene = document.getElementById('fzj.xg.jugex.addgenes')
       const geneList = document.getElementById('fzj.xg.jugex.genelist')
@@ -180,7 +181,7 @@
                       $(domExportGeneList).tooltip()
                       $(domArea1).tooltip()
                       $(domArea2).tooltip()
-
+                      $(domThreshold).tooltip()
                 }
                 bootstrapJs.src = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'
                 document.head.appendChild(bootstrapJs)
@@ -247,6 +248,7 @@
                         name : region2.name,
                         url : region2.PMapURL
                   },
+                  threshold : domThreshold.value,
                   genelist : geneNames
             }
 
@@ -263,8 +265,9 @@
             const panelObj = pendingRequestPanel()                                     
             panelObj.panelHeader.innerHTML = 'Running Differential Analysis.....'
             panelObj.panelBody.className += ' hidden'
-            var img = document.createElement('img')
-            img.src = "animated-progress-bar-gif-free-download-9.gif"
+            //var img = document.createElement('img')
+            //img.src = "animated-progress-bar-gif-free-download-9.gif"
+            //panelObj.panelHeader.appendChild(img)
             document.getElementById('fzj.xg.jugex.result').appendChild(panelObj.panel)
             const queryString = `Regions queried: ${requestBodyV2.area1.name} ${requestBodyV2.area2.name}. Genes queried: ${JSON.stringify(requestBodyV2.genelist).replace(/\"|\[|\]/gi,'')}`
             const queryStringDisplay = `(${requestBodyV2.area1.name}, ${requestBodyV2.area2.name})`
@@ -396,7 +399,7 @@
 
       })
 
-      let region1, region2
+      let region1, region2, thresholdval
 
       const handleViewerSubscription = (ev) =>{
 
@@ -426,12 +429,18 @@
                               domArea2.setAttribute('value', ev.segment ? `${region.name} label:${ev.segment}` : '')
                               region2 = region
                         }
+                        /*if (document.activeElement === domThreshold) {
+                              thresholdval = domThreshold.value
+                              console.log('here ',thresholdval )
+                        }*/
                   })
                   .catch(e=>{
                         /* did not find the region in meta data */
                         //preview.innerHTML = ev.segment? `label:${ev.segment}` :'&nbsp;'
                         if (document.activeElement === domArea1) domArea1.setAttribute('value', ev.segment ? `label:${ev.segment}` : '')
                         if (document.activeElement === domArea2) domArea2.setAttribute('value', ev.segment ? `label:${ev.segment}` : '')
+                        //if (document.activeElement === domThreshold) thresholdval = domThreshold.value
+
                   })
       }
       

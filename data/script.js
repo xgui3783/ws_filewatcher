@@ -358,10 +358,10 @@
                                               domDownloadPVal.style.order = -3
                                               panelObj.panelBody.appendChild(domDownloadPVal)
 
-                                              let areaString = 'ROI, x, y, z, well, polygon\n'
+                                              let areaString = 'ROI, x, y, z, '+requestBodyV2.genelist+'\n'
                                               for(let key in result[0]){
                                                   for(let i in result[0][key]){
-                                                      areaString += key+','+result[0][key][i]['xyz'].join(',')+','+result[0][key][i]['well']+','+result[0][key][i]['polygon']+'\n'
+                                                      areaString += key+','+result[0][key][i]['xyz'].join(',')+','+result[0][key][i]['winsorzed_mean']+'\n'
                                                   }
                                               }
 

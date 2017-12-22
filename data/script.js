@@ -1,563 +1,359 @@
 (()=>{
-     const preview = document.getElementById('fzj.xg.jugex.preview')
-     const domArea1 = document.getElementById('fzj.xg.jugex.area1')
-     const domArea2 = document.getElementById('fzj.xg.jugex.area2')
-     const editArea1 = document.getElementById('fzj.xg.jugex.editarea1')
-     const editArea2 = document.getElementById('fzj.xg.jugex.editarea2')
-     const domThreshold = document.getElementById('fzj.xg.jugex.threshold')
-     const domGenes = document.getElementById('fzj.xg.jugex.genes')
-     const addGene = document.getElementById('fzj.xg.jugex.addgenes')
-     const geneList = document.getElementById('fzj.xg.jugex.genelist')
-     const domSubmit = document.getElementById('fzj.xg.jugex.submit')
-     const domWarning = document.getElementById('fzj.xg.jugex.warning')
-     const domWarningText = document.getElementById('fzj.xg.jugex.warning.text')
-     const domWarningClose = document.getElementById('fzj.xg.jugex.warning.close')
-     domWarningClose.addEventListener('click',()=>{
-                                          domWarning.className += ' hidden'
-                                      })
 
-     const domExportGeneList = document.getElementById('fzj.xg.jugex.genelist.export')
-     domExportGeneList.addEventListener('click',()=>{
-                                            const exportGeneList = 'data:text/csv;charset=utf-8,'+geneNames.join(',')
-                                            const exportGeneListURI = encodeURI(exportGeneList)
-                                            const dlExportGeneList = document.createElement('a')
-                                            dlExportGeneList.setAttribute('href',exportGeneListURI)
-                                            document.body.appendChild(dlExportGeneList)
-                                            const date = new Date()
-                                            dlExportGeneList.setAttribute('download',`exported_genelist_${''+date.getFullYear()+(date.getMonth()+1)+date.getDate()+'_'+date.getHours()+date.getMinutes()}.csv`)
-                                            dlExportGeneList.click()
-                                            document.body.removeChild(dlExportGeneList)
-                                        })
+  /* components like this are reusable. */
+  class HoverRegionSelectorComponent extends HTMLElement{
 
-     const importGeneList = (file) => {
-         const csvReader = new FileReader()
-         csvReader.onload = (ev)=>{
-             const csvRaw = ev.target.result
-             geneList.innerHTML = ''
-             geneNames.splice(0,geneNames.length)
-             csvRaw.split(/\r|\r\n|\n|\t|\,|\;/).forEach(gene=>{
-                                                             if(gene.length > 0)
-                                                             fnAddGene(gene)
-                                                         })
-         }
-         csvReader.readAsText(file,'utf-8')
-     }
+    constructor(){
+      super()
 
-     const domImportGeneList = document.getElementById('fzj.xg.jugex.genelist.import')
-     const domImportGeneListInput = document.getElementById('fzj.xg.jugex.genelist.import.input')
-     domImportGeneListInput.addEventListener('change',(ev)=>{
-                                                 importGeneList(ev.target.files[0])
-                                             })
-     domImportGeneList.addEventListener('click',()=>{
-                                            domImportGeneListInput.click()
-                                        })
+      this.template = 
+      `
+      <div class = "input-group">
+        <input class = "form-control" placeholder = "" readonly = "readonly" type = "text" region>
+        <span class = "input-group-btn">
+          <div class = "btn btn-default" id = "fzj.xg.factory.edit">
+            <span class = "glyphicon glyphicon-edit"></span>
+          </div>
+        </span>
+      </div>
+      `
+      this.listening = true
+      this.selectedRegion = null
+      this.shutdownHooks = []
+    }
 
-     const MINCHAR = 1
-     //change the following to localhost:8080 after running aioserver.py locally
-     //const URLBASE = 'http://172.104.156.15:8003/'
-     //      const URLBASE = 'http://localhost:8003/'
-     const URLBASE = 'http://134.94.8.220:8003/'
+    connectNehubaHooks(){
+      const mouseOverNehuba = window.viewerHandle.mouseOverNehuba
+        .filter(()=>this.listening)
+        .subscribe(ev=>{
+          this.selectedRegion = ev.foundRegion
+          this.render()
+        })
 
-     const geneNames = []
+      this.shutdownHooks.push(()=>mouseOverNehuba.unsubscribe())
+    }
 
-     let autocompleteSuggestions = []
+    disconnectedCallback(){
+      this.shutdownHooks.forEach(fn=>fn())
+    }
 
-     const fnAddGene = (gene) =>{
-         const addGenePill = (name)=>{
-             const container = document.createElement('span')
-             container.className = 'label label-default'
-             const text = document.createElement('span')
-             text.innerHTML = name
-             const remove = document.createElement('span')
-             remove.className = 'glyphicon glyphicon-remove'
-             remove.addEventListener('click',()=>{
-                                         geneNames.splice(geneNames.indexOf(name),1)
-                                         geneList.removeChild(container)
-                                     })
-             container.appendChild(text)
-             container.appendChild(remove)
-             geneList.appendChild(container)
+    connectedCallback(){
+      const shadowRoot = this.attachShadow({mode:'open'})
+      this.rootChild = document.createElement('div')
+      shadowRoot.appendChild( this.rootChild )
+      this.connectNehubaHooks()
+      this.render()
+    }
 
-             container.style.marginRight = '5px'
-             container.style.display = 'inline-block'
-             text.style.marginRight = '5px'
-         }
+    render(){
+      this.rootChild.innerHTML = this.template
+      this.rootChild.querySelector('input[region]').value = this.selectedRegion ? this.selectedRegion.name : '' 
+    }
+  }
+  customElements.define('hover-region-selector-card', HoverRegionSelectorComponent)
 
-         domGenes.value = ''
-         domGenes.blur()
-         domGenes.focus()
-         if ( geneNames.find(name=>name.toUpperCase()==gene.toUpperCase()) ) {
-             return false
-         }
-         else {
-             geneNames.push(gene.toUpperCase())
-             addGenePill(gene.toUpperCase())
-             return true
-         }
-     }
+  /* reusable pill components */
+  class DismissablePill extends HTMLElement{
+    constructor(){
+      super()
+      this.name = ''
+      this.template = ``
+    }
 
-     addGene.addEventListener('click',()=>{
-                                  if(autocompleteSuggestions.length>0&&domGenes.value.length>=MINCHAR)
-                                  fnAddGene(autocompleteSuggestions[0])
-                              })
+    render(){
+      this.template = 
+      `
+      <span class = "label label-default">
+        <span pillName>${this.name}</span>
+        <span class = "glyphicon glyphicon-remove" pillRemove></span>
+      </span>
+      `
+    }
 
-     domGenes.addEventListener('keydown',(ev)=>{
-                                   if (ev.key=='Enter') addGene.click()
-                               })
+    connectedCallback(){
+      const shadowRoot = this.attachShadow({mode:'open'})
+      this.render()
+      shadowRoot.innerHTML = this.template
+      const removePill = shadowRoot.querySelector('span[pillRemove]')
+      removePill.addEventListener('click',()=>{
+        this.onRemove(this.name)
+        this.remove()
+      })
+    }
 
-     const domGenesGroup = document.getElementById('fzj.xg.jugex.genes.group')
+    onRemove(name){}
+  }
+  customElements.define('dismissable-pill-card',DismissablePill)
 
-     const resetDomGenes = ()=>{
-         domGenes.style.backgroundColor = 'rgba(128,128,128,0.0)'
-         domGenes.setAttribute('placeholder','Genes of interest ...')
-     }
+  class WebJuGExGeneComponent extends HTMLElement{
+    constructor(){
+      super()
 
-     domGenes.addEventListener('dragover',(ev)=>{
-                                   domGenes.style.backgroundColor = 'rgba(128,128,128,0.2)'
-                                   domGenes.setAttribute('placeholder','Drop CSV file here ...')
-                                   ev.stopPropagation()
-                                   ev.preventDefault()
-                               },false)
+      this.selectedGenes = []
+      this.arrDict = []
+      this.autocompleteSuggestions = []
+      this.template = 
+      `
+      <div class = "input-group">
+        <input geneInputBox type = "text" class = "form-control" placeholder = "Enter gene of interest ... ">
+        <span class = "input-group-btn">
+          <div geneAdd class = "btn btn-default" title = "Add a gene">Add</div>
+          <div geneImport class = "btn btn-default" title = "Import a CSV file">Import</div>
+          <div geneExport class = "btn btn-default" title = "Export selected genes into a csv file">Export</div>
+        </span>
+      </div>
+      `
+    }
 
-     domGenes.addEventListener('dragleave',(ev)=>{
-                                   resetDomGenes()
-                               },false)
+    connectedCallback(){
+      const shadowRoot = this.attachShadow({mode:'open'})
+      this.rootChild = document.createElement('div')
+      this.rootChild.innerHTML = this.template
+      shadowRoot.appendChild(this.rootChild)
 
-     domGenes.addEventListener('drop',function(ev){
-         ev.stopPropagation();
-         ev.preventDefault();
-         resetDomGenes()
-         importGeneList( ev.dataTransfer.files[0] )
-     },false)
+      this.config()
+      this.init()
+    }
 
-     const autocompleteCss = document.createElement('link')
-     autocompleteCss.type = 'text/css'
-     autocompleteCss.rel = 'stylesheet'
-     autocompleteCss.href = 'http://172.104.156.15/css/js-autocomplete.min'
+    config(){
+      this.MINCHAR = 3
+      this.URLBASE = 'http://172.104.156.15:8003/'
+    }
 
-     const fetchAutocompleteDictionary = new Promise((resolve,reject)=>{
-                                                         fetch(URLBASE)
-                                                         .then(txt=>txt.json())
-                                                         .then(json=>resolve(json))
-                                                         .catch(e=>{
-                                                                    Console.log('fetch autocomplete list failed!Populating autocomplete with original short list',e)
-                                                                    resolve(["ADRA2A", "AVPR1B", "CHRM2", "CNR1", "CREB1", "CRH", "CRHR1", "CRHR2", "GAD2", "HTR1A", "HTR1B", "HTR1D", "HTR2A", "HTR3A", "HTR5A", "MAOA", "PDE1A", "SLC6A2", "SLC6A4", "SST", "TAC1", "TPH1", "GPR50", "CUX2", "TPH2"])
-                                                                })
-                                                     })
+    init(){
+      this.elGeneInputBox = this.rootChild.querySelector('input[geneInputBox]')
+      this.elGeneAdd = this.rootChild.querySelector('div[geneAdd]')
+      this.elGeneImport = this.rootChild.querySelector('div[geneImport]')
+      this.elGeneExport = this.rootChild.querySelector('div[geneExport]')
 
-     let autocompleteEl
-     const autocompleteJs = document.createElement('script')
-     autocompleteJs.onload = ()=>{
-         fetchAutocompleteDictionary.then(arrDict=>{
-                                              autocompleteEl = new autoComplete({
-                                                                                    selector : domGenes,
-                                                                                    delay : 0,
-                                                                                    minChars : MINCHAR,
-                                                                                    cache : false,
-                                                                                    source : (term,suggest)=>{
-                                                                                        const searchTerm = new RegExp('^'+term,'gi')
-                                                                                        autocompleteSuggestions = arrDict.filter(dict=>searchTerm.test(dict))
-                                                                                        suggest(autocompleteSuggestions)
-                                                                                    },
-                                                                                    onSelect : (e,term,item)=>{
-                                                                                        fnAddGene(term)
-                                                                                    }
-                                                                                })
-                                          })
-     }
-     autocompleteJs.src = 'http://172.104.156.15/js/js-autocomplete.min'
+      this.elGeneAdd.addEventListener('click',()=>{
+        if(this.autocompleteSuggestions.length > 0 && this.elGeneInputBox.value.length >= this.MINCHAR)
+          this.addGene(this.autocompleteSuggestions[0])
+      })
 
-     document.head.appendChild(autocompleteJs)
-     document.head.appendChild(autocompleteCss)
+      this.elGeneInputBox.addEventListener('keydown',(ev)=>{
+        ev.stopPropagation()
+        ev.stopImmediatePropagation()
+        if(ev.key=='Enter') this.elGeneAdd.click()
+      })
 
+      this.loadExternalResources()
+      fetch(this.URLBASE).then(txt=>txt.json())
+        .then(json=>{
+          this.arrDict = json
+        })
+        .catch(err=>{
+          console.log('failed to fetch full list of genes... using limited list of genes instead ...',e)
+          this.arrDict = ["ADRA2A", "AVPR1B", "CHRM2", "CNR1", "CREB1", "CRH", "CRHR1", "CRHR2", "GAD2", "HTR1A", "HTR1B", "HTR1D", "HTR2A", "HTR3A", "HTR5A", "MAOA", "PDE1A", "SLC6A2", "SLC6A4", "SST", "TAC1", "TPH1", "GPR50", "CUX2", "TPH2"]
+        })
+    }
 
-     const jquery = document.createElement('script')
-     jquery.onload = ()=>{
-         console.log('loaded jquery')
-         const bootstrapJs = document.createElement('script')
-         bootstrapJs.onload = ()=>{
-             $(addGene).tooltip()
-             $(domImportGeneList).tooltip()
-             $(domExportGeneList).tooltip()
-             $(domArea1).tooltip()
-             $(domArea2).tooltip()
-             $(domThreshold).tooltip()
-         }
-         bootstrapJs.src = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'
-         document.head.appendChild(bootstrapJs)
-     }
-     jquery.src = 'https://code.jquery.com/jquery-3.2.1.min.js'
-     document.head.appendChild(jquery)
+    loadExternalResources(){
+      this.autoCompleteCss = document.createElement('link')
+      this.autoCompleteCss.type = 'text/css'
+      this.autoCompleteCss.rel = 'stylesheet'
+      this.autoCompleteCss.href = 'http://172.104.156.15/css/js-autocomplete.min'
 
-     const pendingRequestPanel = ()=>{
-         const panel = document.createElement('div')
-         panel.className = "panel panel-warning"
+      this.autoCompleteJs = document.createElement('script')
+      this.autoCompleteJs.onload = () =>{
+        /* append autocomplete here */
+        this.autocompleteInput = new autoComplete({
+          selector : this.elGeneInputBox,
+          delay : 0,
+          minChars : this.MINCHAR,
+          cache : false,
+          source : (term,suggest)=>{
+            const searchTerm = new RegExp('^'+term,'gi')
+            this.autocompleteSuggestions = this.arrDict.filter(dict=>searchTerm.test(dict))
+            suggest(this.autocompleteSuggestions)
+          },
+          onSelect : (e,term,item)=>{
+            this.addGene(term)
+          }
+        })
+      }
+      this.autoCompleteJs.src = 'http://172.104.156.15/js/js-autocomplete.min'
 
-         const panelHeader = document.createElement('div')
-         panelHeader.className = "btn btn-block panel-heading"
-         panelHeader.style.whiteSpace = 'normal'
-         const panelBody = document.createElement('div')
-         panelBody.className = "panel-body"
-         panelBody.style.maxHeight = '400px'
-         panelBody.style.overflowY = 'scroll'
-         panelBody.style.display = 'flex'
-         panelBody.style.flexDirection = 'column'
-         panel.appendChild(panelHeader)
-         panel.appendChild(panelBody)
+      document.head.appendChild(this.autoCompleteJs)
+      document.head.appendChild(this.autoCompleteCss)
+    }
 
-         panelHeader.addEventListener('click',(ev)=>{
-                                          if(/hidden/gi.test(panelBody.className)){
-                                              panelBody.className = panelBody.className.replace(/\s?hidden/gi,'')
-                                          }else{
-                                              panelBody.className += ' hidden'
-                                          }
-                                      })
+    addGene(gene){
+      const pill = document.createElement('dismissable-pill-card')
+      pill.onRemove = (name) =>
+        this.selectedGenes.splice(this.selectedGenes.indexOf(name),1)
+      pill.name = gene
+      this.rootChild.appendChild(pill)
+      this.selectedGenes.push(gene)
+      this.elGeneInputBox.value = ''
+      this.elGeneInputBox.blur()
+      this.elGeneInputBox.focus()
+    }
+  }
+  customElements.define('fzj-xg-webjugex-gene-card',WebJuGExGeneComponent)
 
-         return ({
-                     panel : panel,
-                     panelHeader : panelHeader,
-                     panelBody : panelBody
-                 })
-     }
+  class WebJuGExSearchComponent extends HTMLElement{
+    constructor(){
+      super()
+      this.template = `
+      <div class = "row">
+        <div class = "col-md-12">
+          Please selecte two regions of interest, and at least two genes :
+        </div>
+        <div class = "col-md-12">
+          <hover-region-selector-card area1></hover-region-selector-card>
+        </div>
+        <div class = "col-md-12">
+          <hover-region-selector-card area2></hover-region-selector-card>
+        </div>
+        <div class = "col-md-12">
+          <div class = "input-group">
+            <span class = "input-group-addon">
+              Threshold
+            </span>
+            <input value = "0.20" class = "form-control" type = "range" min = "0" max = "1" step = "0.01" threshold>
+            <span class = "input-group-addon" thresholdValue>
+              0.20
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class = "row">
+        <div class = "col-md-12">
+          <fzj-xg-webjugex-gene-card>
+          </fzj-xg-webjugex-gene-card>
+        </div>
+      </div>
+      <div class = "row">
+        <div class = "col-md-12">
+          <div class = "btn btn-default btn-block" analysisSubmit>
+            Start differential analysis
+          </div>
+        </div>
+      </div>
+      `
+      this.mouseEventSubscription = this.rootChild = this.threshold = this.elArea1 = this.elArea2 = null
+      this.selectedGenes = []
+    }
 
-     domArea1.focus()
+    connectedCallback(){
+      const shadowRoot = this.attachShadow({mode:'open'})
+      this.rootChild = document.createElement('div')
+      this.rootChild.innerHTML = this.template
+      shadowRoot.appendChild(this.rootChild)
+      
+      /* init */
+      this.init()
 
-     domSubmit.addEventListener('click',(ev)=>{
-                                    const validation = () =>{
-                                        if( geneNames.length < 2 || domArea1.value == '' || domArea2.value == ''){
-                                            let errorMsg = '<ul>'
-                                            if (geneNames.length < 2 ) errorMsg += '<li>JuGeX requires at least two (2) genes to be selected! </li>'
-                                            if (domArea1.value == '') errorMsg += '<li>JuGeX requires area1 to be defined! </li>'
-                                            if (domArea2.value == '') errorMsg += '<li>JuGeX requires area2 to be defined! </li>'
-                                            domWarning.className = domWarning.className.replace(/hidden/,'')
-                                            domWarningText.innerHTML = errorMsg + '</ul>'
-                                            return false
-                                        }
-                                        return true
-                                    }
-                                    if (!validation()) return
+      /* attach click listeners */
+      this.onViewerClick()
 
-                                    domWarning.className += ' hidden'
+    }
 
-                                    const requestBodyV2 = {
-                                        area1 : {
-                                            name : region1.name,
-                                            url : region1.PMapURL
-                                        },
-                                        area2 : {
-                                            name : region2.name,
-                                            url : region2.PMapURL
-                                        },
-                                        threshold : domThreshold.value,
-                                        genelist : geneNames
-                                    }
+    init(){
+      this.elArea1 = this.rootChild.querySelector('hover-region-selector-card[area1]')
+      this.elArea2 = this.rootChild.querySelector('hover-region-selector-card[area2]')
+      this.elArea1.listening = true
+      this.elArea2.listening = false
 
-                                    const headers = new Headers()
-                                    headers.append('Content-Type','application/json')
+      this.elGenesInput = this.rootChild.querySelector('fzj-xg-webjugex-gene-card')
 
-                                    const request = new Request(URLBASE+'jugex',{
-                                                                    method : 'POST',
-                                                                    headers : headers,
-                                                                    mode : 'cors',
-                                                                    body : JSON.stringify(requestBodyV2)
-                                                                })
+      this.elAnalysisSubmit = this.rootChild.querySelector('div[analysisSubmit]')
+      this.elAnalysisSubmit.addEventListener('click',()=>{
+        this.analysisGo()
+      })
 
-                                    const panelObj = pendingRequestPanel()
-                                    panelObj.panelHeader.innerHTML = 'Running Differential Analysis.....'
-                                    panelObj.panelBody.className += ' hidden'
-                                    //var img = document.createElement('img')
-                                    //img.src = "animated-progress-bar-gif-free-download-9.gif"
-                                    //panelObj.panelHeader.appendChild(img)
-                                    document.getElementById('fzj.xg.jugex.result').appendChild(panelObj.panel)
-                                    const queryString = `Regions queried: ${requestBodyV2.area1.name} ${requestBodyV2.area2.name}. Genes queried: ${JSON.stringify(requestBodyV2.genelist).replace(/\"|\[|\]/gi,'')}`
-                                    const queryStringDisplay = `(${requestBodyV2.area1.name}, ${requestBodyV2.area2.name})`
+      this.elArea1.addEventListener('click',()=>{
+        this.elArea2.listening = false
+        this.elArea1.listening = true
+        this.elArea1.selectedRegion = null
+        this.elArea1.render()
+      })
 
-                                    const domQueryString = document.createElement('div')
-                                    domQueryString.style.order = -3
-                                    //domQueryString.innerHTML = queryString
-                                    panelObj.panelBody.appendChild(domQueryString)
+      this.elArea2.addEventListener('click',()=>{
+        this.elArea1.listening = false
+        this.elArea2.listening = true
+        this.elArea2.selectedRegion = null
+        this.elArea2.render()
+      })
+      
+      this.elThreshold = this.rootChild.querySelector('input[threshold]')
+      const elThresholdValue = this.rootChild.querySelector('span[thresholdValue]')
+      this.elThreshold.addEventListener('input',(ev)=>{
+        elThresholdValue.innerHTML = parseFloat(this.elThreshold.value).toFixed(2)
+      })
+    }
 
-                                    fetch(request)
-                                    .then(resp=> {if (resp.ok){
-                                                  return Promise.resolve(resp)
-                                              }
-                                              else {
-                                                  return new Promise((resolve,reject)=>{
-                                                                         resp.text()
-                                                                         .then(text=>reject(text))
-                                                                     })
-                                              }
-                                          } )
-                                    .then(resp=>resp.text())
-                                    .then(text=>{
+    onViewerClick(){
+      this.mouseEventSubscription = window.viewerHandle.mouseEvent
+        .filter(ev=>ev.eventName=='click').subscribe(ev=>{
+          if(this.elArea2.listening == true ){
+            this.elArea2.listening = false
+          }
+          if(this.elArea1.listening == true) {
+            this.elArea1.listening = false
+            this.elArea2.listening = true
+          }
+        })
+    }
 
-                                              const domhr = document.createElement('hr')
-                                              domhr.style.order = -2
-                                              domhr.style.width = '100%'
-                                              panelObj.panelBody.appendChild(domhr)
+    analysisGo(){
+      /* test for submit conditions */
+      
+      this.sendAnalysis({
+        area1 : this.elArea1.selectedRegion,
+        area2 : this.elArea2.selectedRegion,
+        threshold : this.elThreshold.value,
+        selectedGenes : this.elGenesInput.selectedGenes
+      })
+    }
 
-                                              const result = JSON.parse(text)
-                                              const createRow = ()=>{
-                                                  const container = document.createElement('div')
-                                                  container.style.display = 'flex'
-                                                  container.style.flexDirection = 'row'
-                                                  const col1 = document.createElement('div')
-                                                  const col2 = document.createElement('div')
-                                                  col2.style.flex = col1.style.flex = '0 0 50%'
-                                                  container.appendChild(col1)
-                                                  container.appendChild(col2)
-                                                  return [container,col1,col2]
-                                              }
-                                              (()=>{
-                                                   [container,col1,col2] = createRow()
-                                                   container.style.order = -1
-                                                   col1.innerHTML = 'Gene Symbol'
-                                                   col1.style.fontWeight = 900
-                                                   col2.innerHTML = 'Pval'
-                                                   col2.style.fontWeight = 900
-                                                   panelObj.panelBody.appendChild(container)
-                                               })()
+    sendAnalysis(analysisInfo){
+      /* to be overwritten by parent class */
+    }
+  }
+  customElements.define('fzj-xg-webjugex-search-card',WebJuGExSearchComponent)
 
-                                              for (let key in result[1]){
-                                                  [container,col1,col2] = createRow()
-                                                  container.style.order = Number(result[1][key]) ? Math.round(Number(result[1][key])*1000) : 1000
-                                                  col1.innerHTML = key
-                                                  col2.innerHTML = result[1][key]
-                                                  panelObj.panelBody.appendChild(container)
-                                              }
+  /* custom class for analysis-card */
+  class WebJuGExAnalysisComponent extends HTMLElement{
+    constructor(){
+      super()
 
-                                              panelObj.panel.className = panelObj.panel.className.replace(/panel\-warning/gi,'')
-                                              panelObj.panel.className += ' panel-success'
-                                              panelObj.panelHeader.innerHTML = 'Completed'
-                                              //panelObj.panelHeader.innerHTML += queryString
-                                              panelObj.panelHeader.innerHTML += queryStringDisplay
-                                              const domhr2 = document.createElement('hr')
-                                              domhr2.style.order = -1001
-                                              domhr2.style.width = '100%'
-                                              panelObj.panelBody.appendChild(domhr2)
+      this.template = ``
+      this.analysisObj = {}
+    }
+    
+    connectedCallback(){
+      const shadowRoot = this.attachShadow({mode:'open'})
+      this.childRoot = document.createElement('div')
+      shadowRoot.appendChild(this.childRoot)
+      this.render()
+    }
 
-                                              /* appending download links */
-                                              const parseContentToCsv = (content)=>{
-                                                  const CSVContent = 'data:text/csv;charset=utf-8,'+content
-                                                  const CSVURI = encodeURI(CSVContent)
-                                                  const domDownload = document.createElement('a')
-                                                  domDownload.setAttribute('href',CSVURI)
-                                                  return domDownload
-                                              }
+    render(){
+      
+      this.template = 
+        `
+        <div class = "panel panel-default">
+          <div class = "btn btn-default btn-block panel-heading" panelHeader>
+            ${this.analysisObj.area1.name} & ${this.analysisObj.area2.name}
+          </div>
+          <div class = "panel-body hidden" panelBody>
+          </div>
+          <div class = "panel-footer hidden" panelFooter>
+          </div>
+        </div>
+        `
+        this.childRoot.innerHTML = this.template
+    }
+  }
+  customElements.define('fzj-xg-webjugex-analysis-card',WebJuGExAnalysisComponent)
 
-                                              const date = new Date()
-                                              const metadata = `Date: ${['',''+date.getFullYear()+(date.getMonth()+1)+date.getDate()+'_'+date.getHours()+date.getMinutes()].toString()}\nRegions: ${['',requestBodyV2.area1.name,requestBodyV2.area2.name].toString()}\nGenelist: ${['',...requestBodyV2.genelist].toString()}\n\n`
-                                              let pvalString = ''
-                                              for(let key in result[1]){
-                                                  pvalString += [key, result[1][key]].join(',') + '\n'
-                                              }
-                                              const dateDownload = ''+date.getFullYear()+(date.getMonth()+1)+date.getDate()+'_'+date.getHours()+':'+date.getMinutes()
-                                              const domDownloadPVal = parseContentToCsv(pvalString)
-                                              domDownloadPVal.innerHTML = 'Download Pvals of genes ('+dateDownload+')'
-                                              domDownloadPVal.setAttribute('download','PVal.csv')
-                                              domDownloadPVal.style.order = -3
-                                              panelObj.panelBody.appendChild(domDownloadPVal)
-
-                                              let areaString = 'ROI, x, y, z, '+requestBodyV2.genelist+'\n'
-                                              for(let key in result[0]){
-                                                  for(let i in result[0][key]){
-                                                      areaString += key+','+result[0][key][i]['xyz'].join(',')+','+result[0][key][i]['winsorzed_mean']+'\n'
-                                                  }
-                                              }
-
-                                              const domDownloadArea = parseContentToCsv(areaString)
-                                              domDownloadArea.innerHTML = 'Download sample coordinates ('+dateDownload+')'
-                                              domDownloadArea.setAttribute('download',`SampleCoordinates.csv`)
-                                              //domDownloadArea.innerHTML = `Download ${key} CSV`
-                                              //domDownloadArea.setAttribute('download',`${key}.csv`)
-                                              domDownloadArea.style.order = -3
-                                              panelObj.panelBody.appendChild(domDownloadArea)
-
-                                              /* TODO remove the try catch block window.pluginControl should always be defined */
-
-                                              try{
-                                                  window['pluginControl'].next({
-                                                                                   target : 'JuGeX',
-                                                                                   id : Date.now().toString(),
-                                                                                   code : 100,
-                                                                                   body : {
-                                                                                       blink : true,
-                                                                                       popoverMessage : 'Request completed! '
-                                                                                   }
-                                                                               })
-                                              }catch(e){
-                                                  console.log('error, window.pluginControl not implemented',e)
-                                              }
-                                          })
-                                    .catch(e=>{
-                                               console.log('error',e)
-                                               panelObj.panel.className = panelObj.panel.className.replace(/panel\-warning/gi,'')
-                                               panelObj.panel.className += ' panel-danger'
-                                               panelObj.panelHeader.innerHTML = 'Error. Check below.'
-                                               panelObj.panelBody.innerHTML = e
-                                           })
-
-                                })
-
-     let region1, region2
-
-     const handleViewerSubscription = (ev) =>{
-
-         const findRegion = new Promise((resolve,reject)=>{
-                                            const searchThroughChildren = (regions) =>{
-                                                const matchedRegion = regions.find(region=>region.labelIndex && region.labelIndex==ev.segment)
-                                                if(matchedRegion) {
-                                                    resolve(matchedRegion)
-                                                }else{
-                                                    regions.forEach(region=>{
-                                                                        searchThroughChildren(region.children)
-                                                                    })
-                                                }
-                                            }
-                                            searchThroughChildren(window.nehubaUI.metadata.selectedParcellation.regions)
-                                            reject('did not find anything')
-                                        })
-
-         findRegion
-         .then(region=>{
-                   //preview.innerHTML = ev.segment? `${region.name} label:${ev.segment}` :'&nbsp;'
-                   if (document.activeElement === domArea1) {
-                       domArea1.setAttribute('value', ev.segment ? `${region.name} label:${ev.segment}` : '')
-                       region1 = region
-                   }
-                   if (document.activeElement === domArea2) {
-                       domArea2.setAttribute('value', ev.segment ? `${region.name} label:${ev.segment}` : '')
-                       region2 = region
-                   }
-               })
-         .catch(e=>{
-                    /* did not find the region in meta data */
-                    //preview.innerHTML = ev.segment? `label:${ev.segment}` :'&nbsp;'
-                    if (document.activeElement === domArea1) domArea1.setAttribute('value', ev.segment ? `label:${ev.segment}` : '')
-                    if (document.activeElement === domArea2) domArea2.setAttribute('value', ev.segment ? `label:${ev.segment}` : '')
-
-                })
-     }
-
-     const attachViewerSubscription = () =>{
-         try{
-             return window.nehubaViewer.mouseOver.segment
-             .filter(ev=>ev.layer.name=='atlas')
-             .subscribe(ev=>{
-                            handleViewerSubscription(ev)
-                        })
-         }catch(e){
-             /* viewer does not exist when plugin instantiated */
-             console.log('error!',e)
-             return null
-         }
-     }
-
-     const clearEditArea = () =>{
-         domArea1.setAttribute('placeholder','')
-         domArea2.setAttribute('placeholder','')
-     }
-
-     editArea1.addEventListener('click',()=>{
-                                    clearEditArea()
-                                    domArea1.focus()
-                                    domArea1.setAttribute('value','')
-                                    domArea1.setAttribute('placeholder','Select a region ...')
-                                })
-
-     editArea2.addEventListener('click',()=>{
-                                    clearEditArea()
-                                    domArea2.focus()
-                                    domArea2.setAttribute('value','')
-                                    domArea2.setAttribute('placeholder','Select a region ...')
-                                })
-
-     let viewerSubscription
-
-     /* TODO fix this... window.mouseEvent is not longer defined */
-     let mouseEventSubscription
-     try{
-         mouseEventSubscription = window.mouseEvent
-         .filter(ev=>ev.mode=='click')
-         .subscribe(ev=>{
-                        console.log(ev)
-                        if( domArea1.getAttribute('value') == '' ){
-                            domArea1.focus()
-                        }else if( domArea2.getAttribute('value') == '' ){
-                            domArea2.focus()
-                        }else if( domThreshold.value == '' ){
-                            domThreshold.focus()
-                        }
-                        else if( domGenes.getAttribute('value') == '' ){
-                            domGenes.focus()
-                        }
-                    })
-     }catch(e){
-         console.log('old api, no longer works',e)
-         console.log('reroute to new api to subscribe to new event')
-         mouseEventSubscription = window.nehubaUI.mouseEvent
-         .filter(ev=>ev.eventName=='click')
-         .subscribe(ev=>{
-                        if( domArea1.getAttribute('value') == '' || !domArea1.getAttribute('value') ){
-                            domArea1.focus()
-                        }else if( domArea2.getAttribute('value') == '' || !domArea2.getAttribute('value') ){
-                            domArea2.focus()
-                        }
-                        else if( domThreshold.value == '' ){
-                            domThreshold.focus()
-                        }
-                    })
-     }
-
-     /* updated api */
-     try{
-         mouseEventSubscription = window.nehubaUI.mouseEvent
-         .filter(ev=>ev.mode=='click')
-         .subscribe(ev=>{
-                        if( domArea1.getAttribute('value') == '' ){
-                            domArea1.focus()
-                        }else if( domArea2.getAttribute('value') == '' ){
-                            domArea2.focus()
-                        }
-                        else if( domThreshold.value == '' ){
-                            domThreshold.focus()
-                        }
-                    })
-     }catch(e){
-         console.log('error!!!!',e)
-     }
-
-     /* attach nehubaUI hooks. These should not fail */
-     try{
-         window.nehubaUI.viewControl
-         .filter(evPk=>evPk.target=='loadTemplate')
-         .subscribe(evPk=>{
-                        if (evPk.code==100 && viewerSubscription) viewerSubscription.unsubscribe()
-                        if (evPk.code==200)viewerSubscription = attachViewerSubscription()
-                    })
-         const shutdownHandler = window.pluginControl
-         .filter(evPk=>evPk.target=='fzj.xg.jugex'&&evPk.body.shutdown)
-         .subscribe(evPk=>{
-                        console.log('jugex shutdown sequence started')
-                        viewerSubscription.unsubscribe()
-                        shutdownHandler.unsubscribe()
-                        mouseEventSubscription.unsubscribe()
-                        if(autocompleteEl) autocompleteEl.destroy()
-                        document.head.removeChild(autocompleteCss)
-                        document.head.removeChild(autocompleteJs)
-                    })
-     }catch(e){
-         console.log('attaching nehubaUI hooks failed. probably should diagnose the issue.',e)
-     }
-
-     /* attach viewer subscription on init */
-     try{
-         viewerSubscription = window.nehubaViewer.mouseOver.segment
-         .filter(ev=>ev.layer.name=='atlas')
-         .subscribe(ev=>{
-                        handleViewerSubscription(ev)
-                    })
-     }catch(e){
-         console.log('viewer not yet initialised')
-     }
- })()
+  const searchCard = document.querySelector('fzj-xg-webjugex-search-card')
+  const container = document.getElementById('fzj.xg.webjugex.container')
+  searchCard.sendAnalysis = (analysisInfo) => {
+    const analysisCard = document.createElement('fzj-xg-webjugex-analysis-card')
+    analysisCard.analysisObj = analysisInfo
+    container.appendChild(analysisCard)
+  }
+})()

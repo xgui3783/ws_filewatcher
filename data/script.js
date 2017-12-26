@@ -321,6 +321,7 @@
 
       this.template = ``
       this.analysisObj = {}
+      this.status = 'pending'
     }
     
     connectedCallback(){

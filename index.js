@@ -2,6 +2,7 @@ const WebSocketServer = require('ws').Server
 const wss = new WebSocketServer({port:5080})
 const chokidar = require('chokidar')
 const fs = require('fs')
+const mime = require('mime-types')
 
 wss.on('connection',(ws)=>{
 
@@ -26,7 +27,7 @@ wss.on('connection',(ws)=>{
 
     watcher.on('change',(path,stat)=>{
         readFile(path)
-            .then(data=>ws.send(JSON.stringify({event:'change',filename:path.replace(/data\\|data\//,''),data:data}),err=>{
+            .then(data=>ws.send(JSON.stringify({event:'change',filename:path.replace(/data\\|data\//,''),mimetype : mime.lookup(path),data:data}),err=>{
                 if(err){
                     console.log('ws.sendmessage error',err)
                 }
@@ -37,13 +38,35 @@ wss.on('connection',(ws)=>{
     })
 
     const readFile = (path)=> new Promise((resolve,reject) =>{
-        fs.readFile(path,'utf8',(err,data)=>{
-            if(err){
-                console.log('reading file error ...', err)
-                reject(err)
-            }else{
-                resolve(data)
-            }
-        })
+        const mimetype = mime.lookup(path)
+        if(/text|javascript|json/.test(mimetype)){
+            fs.readFile(path,'utf-8',(err,data)=>{
+                if(err){
+                    console.log('reading file error ...', err)
+                    reject(err)
+                }else{
+                    resolve(data)
+                }
+            })
+        }else if(/image/.test(mimetype)){
+            fs.readFile(path,(err,data)=>{
+                if(err){
+                    console.log('reading file error...',err)
+                    reject(err)
+                }else{
+                    resolve((new Buffer(data)).toString('base64'))
+                }
+            })
+        }else{
+            /* what other kind of mime types are there? */
+            fs.readFile(path,(err,data)=>{
+                if(err){
+                    console.log('reading file error...',err)
+                    reject(err)
+                }else{
+                    resolve((new Buffer(data)).toString('base64'))
+                }
+            })
+        }
     })
 })

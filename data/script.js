@@ -38,9 +38,9 @@
     }
 
     connectedCallback(){
-      const shadowRoot = this.attachShadow({mode:'open'})
+      // const shadowRoot = this.attachShadow({mode:'open'})
       this.rootChild = document.createElement('div')
-      shadowRoot.appendChild( this.rootChild )
+      this.appendChild( this.rootChild )
       this.connectNehubaHooks()
       this.render()
     }
@@ -71,10 +71,10 @@
     }
 
     connectedCallback(){
-      const shadowRoot = this.attachShadow({mode:'open'})
+      // const shadowRoot = this.attachShadow({mode:'open'})
       this.render()
-      shadowRoot.innerHTML = this.template
-      const removePill = shadowRoot.querySelector('span[pillRemove]')
+      this.innerHTML = this.template
+      const removePill = this.querySelector('span[pillRemove]')
       removePill.addEventListener('click',()=>{
         this.onRemove(this.name)
         this.remove()
@@ -106,10 +106,10 @@
     }
 
     connectedCallback(){
-      const shadowRoot = this.attachShadow({mode:'open'})
+      // const shadowRoot = this.attachShadow({mode:'open'})
       this.rootChild = document.createElement('div')
       this.rootChild.innerHTML = this.template
-      shadowRoot.appendChild(this.rootChild)
+      this.appendChild(this.rootChild)
 
       this.config()
       this.init()
@@ -129,6 +129,28 @@
       this.elGeneAdd.addEventListener('click',()=>{
         if(this.autocompleteSuggestions.length > 0 && this.elGeneInputBox.value.length >= this.MINCHAR)
           this.addGene(this.autocompleteSuggestions[0])
+      })
+
+      this.elGeneInputBox.addEventListener('dragenter',(ev)=>{
+        this.elGeneInputBox.setAttribute('placeholder','Drop file here to be uploaded')
+      })
+
+      this.elGeneInputBox.addEventListener('dragleave',(ev)=>{
+        this.elGeneInputBox.setAttribute('placeholder','Enter gene of interest ... ')
+      })
+
+      this.elGeneInputBox.addEventListener('drop',(ev)=>{
+        ev.preventDefault()
+        ev.stopPropagation()
+        ev.stopImmediatePropagation()
+        this.elGeneInputBox.setAttribute('placeholder','Enter gene of interest ... ')
+        //ev.dataTransfer.files[0]
+      })
+
+      this.elGeneInputBox.addEventListener('dragover',(ev)=>{
+        ev.preventDefault()
+        ev.stopPropagation()
+        ev.stopImmediatePropagation()
       })
 
       this.elGeneInputBox.addEventListener('keydown',(ev)=>{
@@ -152,7 +174,7 @@
       this.autoCompleteCss = document.createElement('link')
       this.autoCompleteCss.type = 'text/css'
       this.autoCompleteCss.rel = 'stylesheet'
-      this.autoCompleteCss.href = 'http://172.104.156.15/css/js-autocomplete.min'
+      this.autoCompleteCss.href = 'http://172.104.156.15/cors/css/js-autocomplete.min'
 
       this.autoCompleteJs = document.createElement('script')
       this.autoCompleteJs.onload = () =>{
@@ -172,7 +194,7 @@
           }
         })
       }
-      this.autoCompleteJs.src = 'http://172.104.156.15/js/js-autocomplete.min'
+      this.autoCompleteJs.src = 'http://172.104.156.15/cors/js/js-autocomplete.min'
 
       document.head.appendChild(this.autoCompleteJs)
       document.head.appendChild(this.autoCompleteCss)
@@ -237,10 +259,10 @@
     }
 
     connectedCallback(){
-      const shadowRoot = this.attachShadow({mode:'open'})
+      // const shadowRoot = this.attachShadow({mode:'open'})
       this.rootChild = document.createElement('div')
       this.rootChild.innerHTML = this.template
-      shadowRoot.appendChild(this.rootChild)
+      this.appendChild(this.rootChild)
       
       /* init */
       this.init()
@@ -321,12 +343,13 @@
 
       this.template = ``
       this.analysisObj = {}
+      this.status = 'pending'
     }
     
     connectedCallback(){
-      const shadowRoot = this.attachShadow({mode:'open'})
+      // const shadowRoot = this.attachShadow({mode:'open'})
       this.childRoot = document.createElement('div')
-      shadowRoot.appendChild(this.childRoot)
+      this.appendChild(this.childRoot)
       this.render()
     }
 
@@ -355,5 +378,16 @@
     const analysisCard = document.createElement('fzj-xg-webjugex-analysis-card')
     analysisCard.analysisObj = analysisInfo
     container.appendChild(analysisCard)
-  }
+  };
+
+  setTimeout(()=>{
+
+    const img = new Image()
+    img.onload = () =>{
+      console.log('onload')
+      container.appendChild(img)
+    }
+    // img.src = 'data:image/png;base64, '+window['bigbrainURL']
+    img.src = sessionStorage.getItem('bigbrain.PNG')
+  },500)
 })()
